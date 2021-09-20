@@ -187,7 +187,7 @@ Y <- tibble(mtcars$mpg)
 Y <- as.matrix(Y)
 Y
 ```
-This gives the actual values of y (fuel use) for each car in the data set. 
+*This gives the actual values of y (fuel use) for each car in the data set.* 
 
 ```{r}
 #estimated y
@@ -196,21 +196,21 @@ est_Y <- as.matrix(est_Y)
 
 est_Y
 ```
-This is then the estimated y's (y-hat or the fitted values) based on the model.
+*This is then the estimated y's (y-hat or the fitted values) based on the model.*
 
 ```{r}
 #the actual x-values of the weight:
 X <- model.matrix(model_lm)
 X
 ```
-gives us all the x-values, which is here the actual weight of each car. 
+*gives us all the x-values, which is here the actual weight of each car.* 
 
 ```{r}
 # epsilon - also known as the residuals
 residuals <- model_lm$residuals
 residuals
 ```
-This is the difference between the actual y-value and the estimated y-value - the vertical length from each datapoint to the linear model. 
+*This is the difference between the actual y-value and the estimated y-value - the vertical length from each datapoint to the linear model.* 
     
     
 i. create a plot that illustrates $Y$ and $\hat{Y}$ (if you are feeling ambitious, also include $\epsilon$ (hint: you can use the function __arrows__))
@@ -276,7 +276,7 @@ ggplot(mtcars, aes(wt)) +
 
 
 ```
-The green line is the quadratic fit, based on the OLS estimator, the darkblue points are the actual datapoints, and the blue line is the fitted linear model. 
+*The green line is the quadratic fit, based on the OLS estimator, the darkblue points are the actual datapoints, and the blue line is the fitted linear model.* 
 
 
 
@@ -374,7 +374,7 @@ b_hat3[4]
 lm(mpg ~ 1, data=mtcars)
 mean(mtcars$mpg)
 ```
-It is identical to the mean of the y-value, since the model here has a constant slope of 1.  
+*It is identical to the mean of the y-value, since the model here has a constant slope of 1. * 
 
 
 
