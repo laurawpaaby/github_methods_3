@@ -176,8 +176,9 @@ model_lm <- lm(mpg ~ wt, data = mtcars)
 ```{r}
 # betahat given the summary
 bhat_model <- model_lm$coefficients
+bhat_model
 ```
-*beta hat is a vector representing the  slope, -5.34, and the intercept. The slope indicates that for each time the weight goes up by 1 lb/1000, the fuel use decreases by 5.34 - intuitively this makes no sense though ... The intercept is 37.23 which here does not make sense to interpret, since it is the fuel use when a car has the weight of 0*
+*beta hat is a vector representing the  slope, -5.34, and the intercept 37.29. The slope indicates that for each time the weight goes up by 1 lb/1000, the fuel use decreases by 5.34 - intuitively this makes no sense though ... The intercept is 37.29 which does not make sense to interpret, since it is the fuel use when a car has the weight of 0*
 
 ```{r}
 # actual y values 
@@ -186,7 +187,7 @@ Y <- tibble(mtcars$mpg)
 Y <- as.matrix(Y)
 Y
 ```
-This gives the actual values of y. 
+This gives the actual values of y (fuel use) for each car in the data set. 
 
 ```{r}
 #estimated y
@@ -195,7 +196,7 @@ est_Y <- as.matrix(est_Y)
 
 est_Y
 ```
-
+This is then the estimated y's (y-hat or the fitted values) based on the model.
 
 ```{r}
 #the actual x-values of the weight:
@@ -217,13 +218,13 @@ i. create a plot that illustrates $Y$ and $\hat{Y}$ (if you are feeling ambitiou
 ```{r}
 library(tidyverse)
 
-ggplot(mtcars, aes(wt)) +                    # basic graphical object
-  geom_point(aes(y=est_Y), colour="red") +
-  geom_line(aes(y=est_Y), colour="pink") +
-  geom_point(aes(y=Y), colour="blue") +
-  ylab("Y") + xlab('Weight (lb/1000)') + 
+ggplot(mtcars, aes(wt)) +                    
+  geom_point(aes(y=est_Y), colour="red") + #the fitted values of y
+  geom_line(aes(y=est_Y), colour="pink") + #the line of the linear model 
+  geom_point(aes(y=Y), colour="blue") + #the actual y values
+  ylab("Y (Miles/Gallon)") + xlab('Weight (lb/1000)') + 
   ggtitle("Illustration of Y, Estimated Y and Errors") + 
-  geom_linerange(aes(residuals, ymin = Y, ymax = est_Y, x = wt)) 
+  geom_linerange(aes(residuals, ymin = Y, ymax = est_Y, x = wt)) #the visualization of the residuals  
   
 ```
 
@@ -243,7 +244,6 @@ $$\hat{\boldsymbol{\beta}} = \left(\mathrm{X}^\mathsf{T} \mathrm{X}\right)^{-1} 
 b_hat <- solve(t(X_) %*% X_) %*% t(X_) %*% Y
 b_hat
 ```
-*This is now the estimated beta values: the intercept B0 is here 49,93 and the slope is -13.38. This is now our acquired beta hat values, and they seem quite far from the lm generated - but lets compare ...*
 
 
 
@@ -255,6 +255,8 @@ I(bhat_model)
 I(b_hat)
 
 ```
+The intercept of the linear model is 37.28, whereas the intercept is 49.93 of the quadratic model. The slope if the linear is -5.34 and -13.38 in the quadratic. These differences are quite big, but also hard to compare when the values tells different things for each model, since the models are of different kinds (linear/quadratic). 
+
 
     i. create a plot that illustrates $Y$ and $\hat{Y}$ (if you are feeling ambitious, also include $\epsilon$ (hint: you can use the function __arrows__))  
 
@@ -262,11 +264,10 @@ I(b_hat)
 X_df <- as.data.frame(X_)
 y_hat_new <- b_hat[1]*X_df$`(Intercept)` + b_hat[2]*X_df$wt + b_hat[3]*X_df$wt_squared #calculating y values based on the OLS estimated bhat
 
-y_hat_new
 
-ggplot(mtcars, aes(wt)) +                    # basic graphical object
+ggplot(mtcars, aes(wt)) +                   
   geom_line(aes(y=est_Y), colour="lightblue") +
-  geom_point(aes(y= y_hat_new), colour="darkgreen") +
+  geom_point(aes(y= y_hat_new), colour="green") +
  stat_smooth(aes(y = y_hat_new),method = "lm", formula = y ~ x + I(x^2), size = 0.5, color = 'green') +
   geom_point(aes(y=Y), colour="blue") +
   ylab("Y") + xlab('Weight (lb/1000)') + 
@@ -275,7 +276,7 @@ ggplot(mtcars, aes(wt)) +                    # basic graphical object
 
 
 ```
-The green line is the quadratic fit, based on the OLS estimator, the blue is the actual data points, and the red is the datapoints generated from the linear model. 
+The green line is the quadratic fit, based on the OLS estimator, the darkblue points are the actual datapoints, and the blue line is the fitted linear model. 
 
 
 
@@ -283,12 +284,12 @@ The green line is the quadratic fit, based on the OLS estimator, the blue is the
 Compare the plotted quadratic fit to the linear fit 
 
 1. which seems better? 
-*the blue and green line seem to fit there datapoints equally good ... *
+*Just eyeballing the data, I would argue that the quadratic model (green) fit the points the best. *
 
 2. calculate the sum of squared errors, (show the calculation based on $\epsilon$). Which fit has the lower sum?  
 
 ```{r}
-#making new data frame to have the wariables needed, to create a quadratic model:
+#making new data frame to have the variables needed, to create a quadratic model:
 df_qua <- tibble(wt = X_df$wt, wt_squared = X_df$wt_squared,mpg = mtcars$mpg)
 model_qua <- lm(mpg ~ wt + wt_squared, data = df_qua)
 ```
@@ -296,7 +297,6 @@ model_qua <- lm(mpg ~ wt + wt_squared, data = df_qua)
 ```{r}
 # Sum of squared error for the linear model 
 ssqe <- sum(residuals^2)
-
 #Sum of squared error for the quadratic model
 ssqe2 <- sum(model_qua$residuals^2)
 
@@ -324,21 +324,21 @@ b_hat3
 #making the X3 back into a dataframe so we can use it to estimate new y values
 X_df3 <- as.data.frame(X_3)
 
-y_model3 <- b_hat3[1]*X_df3$`(Intercept)` + b_hat3[2]*X_df3$wt + b_hat3[3]*X_df3$wt_squared + b_hat3[4]*X_df3$wt_3 #calculating y values based on the OLS estimated bhat
+y_model3 <- b_hat3[1]*X_df3$`(Intercept)` + b_hat3[2]*X_df3$wt + b_hat3[3]*X_df3$wt_squared + b_hat3[4]*X_df3$wt_3 #calculating fitted y values based on the OLS estimated bhat
 
 
-ggplot(mtcars, aes(wt)) +                    # basic graphical object
+ggplot(mtcars, aes(wt)) +                   
   geom_line(aes(y=est_Y), colour="lightblue") + # the lm model
   geom_point(aes(y= y_model3), colour="darkgreen") + # the ^3
  stat_smooth(aes(y = y_model3),method = "lm", formula = y ~ x + I(x^2), size = 0.7, color = 'green') +
   geom_point(aes(y=Y), colour="blue") + # the actual datapoints
   geom_point(aes(y= y_hat_new), colour="orange") + # the ^2
  stat_smooth(aes(y = y_hat_new),method = "lm", formula = y ~ x + I(x^2) + I(x^3), size = 0.5, color = 'yellow') +
-  ylab("Y") + xlab('Weight (lb/1000)') + 
+  ylab("Y (Miles/Gallons)") + xlab('Weight (lb/1000)') + 
   ggtitle("Illustration of Y, Estimated Y and OLS Estimated Y when X^2 and Y when X^3")
 
 ```
-
+*The green and yellow lines are visualizing the quadratic and cubic model, and by just looking at the plot, they fit the data more or less equally good*
   
     ii. compare the sum of squared errors  
     
@@ -374,7 +374,7 @@ b_hat3[4]
 lm(mpg ~ 1, data=mtcars)
 mean(mtcars$mpg)
 ```
-It is identical to the mean of the y-value, since the modal is made 
+It is identical to the mean of the y-value, since the model here has a constant slope of 1.  
 
 
 
@@ -403,7 +403,7 @@ inv.logit <- function(x) exp(x) / (1 + exp(x))
     i. what is the relation between the __linear.predictors__ and the __fitted_values__ of the __logistic.model__ object?
 
 
-*When making a logit binomial glm model, the fitted y-hat-values are hard to interpret, since they here are on a log-scale. Only the size and magnitude can provide information, but the number it self are hard to interpret. Therefore we must transform them by the inv.logit function to be on the probability scale ranging from 0-1. They now express the probability for a certain car to have either a manual gear (1) depending on the linear predictors: their weight.*
+*When making a logit binomial glm model, the fitted y-hat-values are hard to interpret, since they here are on a log-scale. Only the size and magnitude can provide information, but the number it self are hard to interpret. Therefore we must transform them by the inv.logit function to be on the probability scale ranging from 0-1. They now express the probability for a certain car to have either a manual gear (1) depending on the linear predictor: their weight.*
     
 ```{r}
 y_hat_logit <- inv.logit(predict(logistic.model)) ##using the estimated y's with predict, and then inverse the values, so the y's aren't on the log scale anymore. 
@@ -415,7 +415,11 @@ log_df <- df_qua %>%
   mutate(gear = mtcars$am)
 
 ggplot(log_df, aes(wt,y_log,))+
-  geom_point()
+  geom_point()+
+  ylab("Fitted Values")+
+  xlab("Weight lb/1000")+
+  ggtitle("Fitted Values for Log Model")+
+  theme_bw()
 
 ```
     
@@ -426,7 +430,11 @@ ggplot(log_df, aes(wt,y_log,))+
 ggplot(log_df, aes(wt, gear))+
   geom_point()+
   stat_smooth(method = 'glm', method.args = list(family = binomial), se = FALSE) + 
-  xlim(0,7)
+  xlim(0,7)+
+  theme_bw()+
+  xlab("Weigth lb/1000")+
+  ylab("Automatic vs. Manual Gear")+
+  ggtitle("The Logistic Function")
 ```
 
     i. what's the interpretation of the estimated $\hat{\beta}_0$ (the _Intercept_)
@@ -434,7 +442,7 @@ ggplot(log_df, aes(wt, gear))+
 logistic.model$coefficients[1] #the intercept of the model
 inv.logit(logistic.model$coefficients[1]) #calculating the intercept in probability
 ```
-  The probability of the gear being manual is 99,99% if the weight is 0. 
+ *The probability of the gear being manual is 99,99% if the weight is 0.* 
     
     
     ii. calculate the estimated probability that the Pontiac Firebird has automatic transmission, given its weight
@@ -447,8 +455,8 @@ pon_fire <- log_df %>%
 head(pon_fire)
 ```
 
-The probability of the Pontiac Firebird has automatic transmission is 3,1% given its weight.
-Could also have been done by adding the intercept with the slope times the weight of the car, and taking the inverse logit of this:
+*The probability of the Pontiac Firebird has automatic transmission is 3,13% given its weight.*
+*Could also have been done by adding the intercept with the slope times the weight of the car, and taking the inverse logit of this:*
 ```{r}
 inv.logit(logistic.model[1] + logistic.model[2]*3.845)
 ```
@@ -482,7 +490,9 @@ library(tidyverse)
 ggplot(log_df, aes(wt))+
   geom_point(aes(y=predicted), colour = 'red')+
   geom_point(aes(y=predicted_squared), colour ='green') + 
-  ylab('P(Y=1)')
+  ylab('P(Y=1)')+
+  xlab("Weight lb/1000")+
+  ggtitle("Quadratic & Linear Logistic Fit")
 
 
 ```
@@ -495,7 +505,7 @@ ggplot(log_df, aes(wt))+
 ```{r}
 AIC(logistic.model,logistic.model.squared)
 ```
-According to the AIC fucntion, the non-squared logistic model provides the better fit. 
+*According to the AIC fucntion, the non-squared logistic model provides the better fit, since the value is smaller* 
 
 ```{r}
 summary(logistic.model)
@@ -503,15 +513,11 @@ summary(logistic.model)
 summary(logistic.model.squared)
 #residual deviance is here 19.118
 ```
-
-
-The bigger the difference of the residual deviance, the greater improvement does the added variable (here wt^2) make. Since the difference between the two deviance are quite small, I'd argue that the quadratic model is not a particularly better fit to the data, the AIC values considered as well.
+*The bigger the difference of the residual deviance, the greater improvement does the added variable (here wt^2) make. Since the difference between the two deviance are quite small, I'd argue that the quadratic model is not a particularly better fit to the data, the AIC values considered as well.*
 
 
     iii. in your own words, why might it be good to penalise a model like the quadratic model, we just fitted.
-    
-    
-    
+*I'd say that a model such as the quadratic here should be penalized do to the risk of overfitting. One could might fear that adding several other variables would provide what would seem as a better fitting model, but this model would then fail to provide an explanation of the nature of the data, and thus fail to fit additional data or predict future observations reliably. *
     
     
     
