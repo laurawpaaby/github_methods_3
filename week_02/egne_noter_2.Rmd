@@ -1,8 +1,8 @@
 ---
 title: "practical_exercise_2, Methods 3, 2021, autumn semester"
-author: 'Sara Krejberg, Niels A. Krogsgaard, Sigurd F. Sørensen, Laura W. Paaby'
-date: "29/9 - 2021"
-output: html_document
+author: '[FILL IN YOUR NAME]'
+date: "[FILL IN THE DATE]"
+output: pdf_document
 ---
 
 <style type="text/css">
@@ -150,6 +150,15 @@ politeness %>%
     
 ## Exercise 2  - comparison of models
 
+For this part, make sure to have `lme4` installed.  
+You can install it using `install.packages("lme4")` and load it using `library(lme4)`  
+`lmer` is used for multilevel modeling
+```{r}
+#loading libraries:
+library(lme4)
+```
+
+
 
 1) Build four models and do some comparisons
     i. a single level model that models _f0mn_ as dependent on _gender_
@@ -176,7 +185,6 @@ model4 <- lmer(f0mn ~ gender.f + (1 | scenario.f) + (1|subject), data = politene
     
 Comparison of models by the Akaike Information Criterion:
 ```{r}
-#v
 AIC(model1, model2, model3, model4)
 ```
 Comparing the residual standard deviation of the models:
@@ -187,40 +195,29 @@ sigma(model2)
 sigma(model3)
 sigma(model4)
 ```
-*Looking at both the standard deviation and the information criterion, we find that the model4 is the best performing model, since it has the smallest value both in AIC and RSD.*
+*Looking at both the standard deviation and the information criterion, we find that the model4 is the best fittet model to the data, since it has the smallest value both places. This makes intuitively good sense, since it is the only model that both have the subject and scenario as baseline, , which means *
 
 
 ```{r}
-#vi the most variance explained by the effects (scenario or subject):
+#vi the most variance explained by the two level models
 pacman::p_load(MuMIn)
 
-r.squaredGLMM(model2)
 r.squaredGLMM(model3)
 r.squaredGLMM(model4)
-
 ```
-
-
-
-
-*model2 showed the best variance explained purely by fixed effects, 68,17%, with scenario as a random intercept.*
-*We can conclude in model3 that adding subject as random intercept rather than scenario explains more of the variance but also has more shared variance with our fixed effect gender.* 
-*Model4 (f0mn ~ gender + (1|scenario) + (1|subject)) showed most explained variance with 80% of the variance being accounted for by both fixed and random effects.* 
-
-
-
+*Looking at the R2c (which takes both random and fixed effects into account) model 4 explains the most variance.*
 
 
     
 2) Why is our single-level model bad?
-*(the single level model is bad, since it violates the most important assumption of independence)*
+*the single level model is bad, since it violates the most important assumptions of independency*
 
     i. create a new data frame that has three variables, _subject_, _gender_ and _f0mn_, where _f0mn_ is the average of all responses of each subject, i.e. averaging across _attitude_ and_scenario_
     
 ```{r}
 #making a new dataframe with the selected variables: 
 politeness_sel <- politeness %>% 
-  filter(!is.na(f0mn)) %>% #making sure there is no NA in the new df
+  filter(!is.na(f0mn)) %>% #making sure there is no NA in the new
   select(f0mn,attitude,subject) %>% 
   group_by(subject) %>% 
   summarise(f0mn_mean = mean(f0mn)) 
@@ -250,7 +247,9 @@ qqline(resid(ms), col = 'lightblue')
 qqnorm(resid(model1))
 qqline(resid(model1), col = 'green')
 ```
-*Looking at the data we how the ms model doesn't fit the line very well, however it does not seemed skewed. The model1 seems a bit skewed, and fits the line worse. This could properly have been fixed by trimming the data/remove outliers.*
+  
+*It is the single level model ms, who by eyeballing the data appears to be closer to the line. This makes sense, since we are here modeling mean values, meaning that the datapoints have been pulled closer to the great mean.* 
+
 
     
     iv. Also make a quantile-quantile plot for the residuals of the  multilevel model with two intercepts. Does it look alright?
@@ -259,7 +258,7 @@ qqline(resid(model1), col = 'green')
 qqnorm(resid(model4))
 qqline(resid(model4), col = 'pink')
 ```
-*In a perfect world, this model would have made the datapoints fit the line better. This doesn't seem to be the case, and the residuals are still right skewed. They don't follow the normal distribution perfectly. However this is the least important of the assumptions, (normality of residuals).*
+*In a perfect world, this model would have made the datapoints fit the line better. This is at first sight hard to see, but the fit seem a bit matching with the multilevel model. However both of them appears to be right scewed, which mean that the residuals of the models are not perfectly distributed normally. This is however the least important of the assumptions, (normality of residuals).*
 
   
 3) Plotting the two-intercepts model
@@ -285,6 +284,9 @@ politeness_una %>%
 
 
 ```
+*Since stat_smooth and I weren't friends, the black dots (not lines sorry) are the plottet fitted values for each of the subjects for each of the scenarios.*
+
+
 
 
 ## Exercise 3 - now with attitude
@@ -294,29 +296,57 @@ politeness_una %>%
 ```{r}
 # the model to carry on with: model4 <- lmer(f0mn ~ gender.f + (1 | scenario.f) + (1|subject), data = politeness)
 #the new model with both gender and attitude: 
-model5 <- lmer(f0mn ~ gender.f + attitude.f + (1|scenario.f)+(1|subject), data = politeness, REML = FALSE)
+model5 <- lmer(f0mn ~ gender.f + attitude.f + (1|scenario.f)+(1|subject), data = politeness)
 ```
 
     ii. make a separate model that besides the main effects of _attitude_ and _gender_ also include their interaction
     
 ```{r}
-model6 <- lmer(f0mn ~ gender.f*attitude.f + (1|scenario.f)+(1|subject), data = politeness, REML = FALSE)
+model6 <- lmer(f0mn ~ gender.f + attitude.f + gender.f*attitude.f + (1|scenario.f)+(1|subject), data = politeness)
 summary(model6)
 ```
 
     iii. describe what the interaction term in the model says about Korean men's pitch when they are polite relative to Korean women's pitch when they are polite (you don't have to judge whether it is interesting)  
-  
-**Understanding the output of the model:**   
+    
 *When males are asked  to be polite, their pitch will according to this be higher.* 
 *The intercepts is for the female, when uttering the statement informal, where they here have the average pitch of 255 hz.*
-*GenderfM is then when we go from female to male on the x ax,  we see how the average pitch decrease with 118 hz.*
-*attitudef.pol, when we go from informal to polite does the average (of both females and males) pitch decrease with 17 hz. This is why need the interaction, so we can consider more than just the average*
-*genderM:attitudepol: this is the interaction between gender and attitude, and it indicates that it decreases 5,5hz less for men than women. This means that the change in pitch for men are on -17.192+5.54 = -11.652, whereas the womens changes with -17.192 hz.*
-*Summarizingly, both men and women decrease their pitch when going from informal to polite, but the male pitch does not decrease as much the women. *
-    *(for the reader: the f just means that it is factors, a bit confusing considering the females - but  this is     not the case!)*
+*GenderfM is then when we go from female to male on the x axe,  we see how the average pitch decrease with 118 hz.*
+*attitudef.pol, when we go from informal to polite does the does the average (of both females and males) pitch decrease with 17 hz. This is why need the interaction, so we can consider more than just the average*
 
-**Reporting the model:**
-*The model f0mn ~ attitude:gender + (1|subject)+ (1|scenario)has an $R^2c$ 0.81 both attitude and gender showed a significant effect on f0mn ($\beta_1$(attitude_pol) = -17.2, SE = 5.4, p>0.05) and ($\beta_2$(genderM) = -119, SE = 12.8, p>0.05). Being polite and male lowers your frequency. Being both Male and Polite has an interaction effect of ($\beta_3$ = 5.5, SE = 8.24, p<0.05). Hereby concluding that there is a small positive insignificant interaction effect of being male and polite. The SE being proportional large compared to the effect size makes it very difficult to say anything meaningful.*
+*genderM:attitudepol: generelt falder pitch med 15 hz fra informal til polite, men for mænd falder den 5 hz mindre end for kvinder = (-15.646 - 5,781) = -10 agtig for mænd, mens for kvinder falder den -15.646*
+
+*genderM:attitudepol: this is the interaction between gender and attitude, and it indicates that it decreases 5,5hz less for men than women. This means that the change in pitch for men are on -17.192+5.54 = -12 ca, whereas the womens changes with -17.192 hz.*
+*Summarizingly, both men and women decrease their pitch when going from informal polite, but the male pitch does not decrease as much as for the women. *
+
+**for the reader: the f just means that it is factors, a bit confusing considering the females - but  this is not the case!**
+    
+```{r}
+fixef(model6)
+ranef(model6) #this is for the subject and scenario (1+random slope|random intercept)
+fitted(model6) #this gives you each values for each subject, in all scenarios, for both polite and informal
+residuals(model6) #this is then difference from the fitted value and the actual measured value in the dataset. 
+```
+*intercept - gender.M = går fra female informal to female informal*
+*intercept - gender.M - attitude = male polite*
+*intercept - attitude.pol = female polite*
+this is the case, since intercept = female informal (alphabetic)
+tænk på det som om du skal gå fra et sted til et andet og regnestykkerne får dig derhen - forhold dig til intercept først som baseline.
+
+```{r}
+ranef(model6)
+```
+giver dig mulighed for at få hver enkelt subjects predictede attitude.
+predict F1 informal: intercept (fra fixed) + (-10) (subject) + 7.25(scenarie 3)
+```{r}
+#F1 polite scenario 3: 
+f1po <- 255.61 - 10.78 + 7.25-17.192212
+f1po
+
+#m7 (-24) informal scenario 3(7.25) male (-118)
+m1inf <- 255.61-118.231676  - 24.43895 + 7.254445 #this is the same as in the fitted model 
+m1inf
+```
+
 
 
     
@@ -327,9 +357,8 @@ summary(model4)
 #model5: gender and attitudes as main effects
 summary(model5)
 #model6: gender and attitude as main effects and with an interaction between them
-summary(model6)
+summary(model5)
 ```
-
 ```{r}
 #comparison by AIC:
 AIC(model4, model5, model6)
@@ -344,41 +373,40 @@ sigma(model6)
 
 ```{r}
 #comparing by the residual variance:
-sum(residuals(model4)^2)
-sum(residuals(model5)^2)
-sum(residuals(model6)^2)
+var(residuals(model4)) #accumulated residual variance 
+var(residuals(model5))
+var(residuals(model6))
 
+#R^2 explains how much of the data is explained by the model (here in %)
+### using R^2 since it is easier to interpret 
+rsq4 <- r.squaredGLMM(model4)*100 
+rsq5 <- r.squaredGLMM(model5)*100
+rsq6 <- r.squaredGLMM(model6)*100
+
+rsq4
+rsq6
+rsq5
 
 ```
-*Considering the output of the comparisons, we suggest model 5: it is the simpler model and adding the interaction effect (model 6) makes almost no explanatory power, while being more complex.* 
+*AIC*
+
+*The standard deviation of the residuals is the difference between a set of observed and predicted values. The standard deviation of the residuals calculates how much the data points spread around the regression line. Thus, the lower the value of this the better do the model fits all of the datapoints.*
+
+*The residual variance is the unexplained variance of any error. It is whats left when you subtract the variance due to regression from the total variance of the dependent variable. This means fot the model, that the higher it's residual variance, the less is the model able to explain the data. Looking at the variance of our 3 models, the third model (model6), which has gender and attitude as main effects and an interaction between them, the most explanatory model.* 
+
+
+
+*Summarizing ... MODEL6*
+
+
 
 
 3)  Choose the model that you think describe the data the best - and write a short report on the main findings based on this model. At least include the following:
+
+*model 6 with interaction - since it *
+
   i. describe what the dataset consists of  
-*The dataset used in this model consists of subject id, binary gender indication (F or M), scenario index (from 1 to 7 depending on what the scenario was), a variable indicating whether the text should be spoken in an formal/polite or informal tone, and a variable called f0mn basically stating the average frequency of the utterance in Hz. Besides these the data also consisted of total duration of utterances in seconds and count of hissing sounds but these are not relevant for the optimal model.*
-
   ii. what can you conclude about the effect of gender and attitude on pitch (if anything)?  
-*f0mn was found to be significantly modulated by gender.* $\beta_2 = -115, SE = 12.16, p<0.05$
-*Attitude also showed a significant modulating of f0mn* $\beta_1 = -14.8, SE = 4, p<0.05$
-
-
   iii. motivate why you would include separate intercepts for subjects and scenarios (if you think they should be included)  
-**Subjects:** *these are only a sample of the total population. Because subject does not exhaust the population of interest (e.g. the whole Korean population) it should be modeled as a random effect. Also, each subject will express random variation caused by individual baselines and individual effects of formal vs. informal situation.*
-  
-**Scenario:** *Again, these scenarios does not exhaust the number of formal or informal scenarios that exist. It should be modeled as a random effect since we have no expectation of how the individual scenario will affect the pitch compared to the other scenarios. There are no preconceptions about any systematic differences between the scenarios, making them have idiosyncratic and random effects on pitch.*  
-  
-  
   iv. describe the variance components of the second level (if any)  
-*Both fixed and random effects accounted for roughly 82% of the variance in the f0mn variable with random effects proportion being 12.7%. Visual inspection shows that both the qqplot and histogram violates the assumption of a mixed effect linear model. The more robust generalized mixed effect model with a link function would be preferred. But as it was not the task such model was not constructed.*   
-
   v. include a Quantile-Quantile plot of your chosen model  
-```{r}
-qqnorm(resid(model5))
-qqline(resid(model5), col = 'aquamarine')
-```
-
-  
-*We used R (R Core Team, 2019) and lmerTest (Kuznetsova, Brockhoff and Christensen, 2017) to perform a linear mixed effects analysis of the relationship between f0mn, gender and attitude. As random effects, we had intercepts for subjects, and scenario.*
-
-
-

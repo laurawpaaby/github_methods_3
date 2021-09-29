@@ -13,6 +13,7 @@ output: html_document
 
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+pacman::p_load(tidyverse, readbulk, patchwork, lmerTest)
 ```
 
 # Exercises and objectives
@@ -26,15 +27,115 @@ REMEMBER: This assignment will be part of your final portfolio
 
 ## Exercise 1
 
+
 Go to https://osf.io/ecxsj/files/ and download the files associated with Experiment 2 (there should be 29).  
 The data is associated with Experiment 2 of the article at the following DOI https://doi.org/10.1016/j.concog.2019.03.007  
 
-1) Put the data from all subjects into a single data frame  
+1) Put the data from all subjects into a single data frame 
+```{r}
+data<- as.tibble(read_bulk("experiment_2", fun = read_csv))
+glimpse(data)
+```
+
+
 2) Describe the data and construct extra variables from the existing variables  
     i. add a variable to the data frame and call it _correct_ (have it be a _logical_ variable). Assign a 1 to each row where the subject indicated the correct answer and a 0 to each row where the subject indicated the incorrect answer (__Hint:__ the variable _obj.resp_ indicates whether the subject answered "even", _e_ or "odd", _o_, and the variable _target_type_ indicates what was actually presented.
+    
+```{r}
+#the target.type and the obj.response should match
+data$correct <- ifelse((data$obj.resp == "o" & data$target.type =="odd") | (data$obj.resp == "e" & data$target.type =="even"), 1,0)
+ls.str(data)
+```
+    
+    
     ii. describe what the following variables in the data frame contain, _trial.type_, _pas_, _trial_, _target.contrast_, _cue_, _task_, _target_type_, _rt.subj_, _rt.obj_, _obj.resp_, _subject_ and _correct_. (That means you can ignore the rest of the variables in your description). For each of them, indicate and argue for what `class` they should be classified into, e.g. _factor_, _numeric_ etc.  
+
+
+*trial_type: trial type is at the moment a character, but should be a factor, so that the perforamce can be modeled and compared by which trial was done*
+```{r}
+data$trial.type <- as.factor(data$trial.type)
+```
+
+*pas: pas indicates whether you have seen the stimulus or not: 1, meaning you just got a tiny glimpse to 4, you saw it properly. It should be a factor since it is a categorical ordered variable.*
+```{r}
+data$pas <- as.factor(data$pas)
+```
+
+*target.contrast: is the contrast in the stimulus shown, it varies of in the different trials. It is numeric, and should stay in that way since *
+```{r}
+data$target.contrast <- as.numeric(data$target.contrast)
+```
+
+*trial:*
+```{r}
+data$trial <- as.factor(data$trial)
+```
+
+
+*cue: is numeric and stay in that way.*
+*task: is a character and should be a factor*
+```{r}
+data$task <- as.factor(data$task)
+```
+
+*target_type:was a character, should be a factor - anova and other functions don't get characters*
+```{r}
+data$target.type <- as.factor(data$target.type)
+```
+
+*rt.subj: *
+*rt.obj: *, 
+*obj.resp*, 
+*subject: the ID of the participant.*
+```{r}
+data$subject <- as.factor(data$subject)
+```
+
+*correct*
+```{r}
+
+```
+
+    
     iii. for the staircasing part __only__, create a plot for each subject where you plot the estimated function (on the _target.contrast_ range from 0-1) based on the fitted values of a model (use `glm`) that models _correct_ as dependent on _target.contrast_. These plots will be our _no-pooling_ model. Comment on the fits - do we have enough data to plot the logistic functions?  
+    
+```{r}
+df_m <- data %>% 
+  filter(trial.type == "staircase") 
+
+#model  
+trial_model <- glm(correct ~ target.contrast, data = df_m, family = "binomial")
+fitted_y <- fitted(trial_model)
+predicted <- predict(trial_model)
+
+plot1 <- ggplot(df_m, aes(target.contrast, fitted_y, color = correct)) + 
+    geom_point()+
+    facet_wrap(~subject) +
+    theme_minimal()+
+    xlab("Target Contrast")+
+    ylab('The Fitted Values') +
+    ggtitle("Subplot for Each Subject Fitted")  
+
+plot2 <- ggplot(df_m, aes(target.contrast, predicted, color = correct)) + 
+    geom_point()+
+    facet_wrap(~subject) +
+    theme_minimal()+
+    xlab("Target Contrast")+
+    ylab('The Fitted Values') +
+    ggtitle("Subplot for Each Subject Predict")  
+
+plot1 + plot2
+```
+    
+    
     iv. on top of those plots, add the estimated functions (on the _target.contrast_ range from 0-1) for each subject based on partial pooling model (use `glmer` from the package `lme4`) where unique intercepts and slopes for _target.contrast_ are modelled for each _subject_  
+    
+```{r}
+#partial pooled model:
+glmer(correct ~ target.contrast) 
+```
+    
+    
     v. in your own words, describe how the partial pooling model allows for a better fit for each subject  
 
 ## Exercise 2

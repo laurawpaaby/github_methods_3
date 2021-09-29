@@ -1,7 +1,7 @@
 ---
 title: "practical_exercise_1, Methods 3, 2021, autumn semester"
-author: '[FILL IN YOUR NAME]'
-date: "[FILL IN THE DATE]"
+author: 'Laura W. Paabys'
+date: "15/9 - 2021"
 output: html_document
 ---
 
@@ -27,7 +27,6 @@ The goals of today's exercise are:
 ## _GitHub_
 
 Go to www.github.com and sign up if you aren't already  
-![__Figure__: _GitHub_'s front page](images/github_front_page.png)  
 
 If you are not already using personal tokens for authentication, have a look here:  
 https://www.edgoad.com/2021/02/using-personal-access-tokens-with-git-and-github.html
@@ -42,7 +41,6 @@ _R_ can be downloaded and installed from https://mirrors.dotsrc.org/cran/ (Danis
 ### Linux
 Can also be installed from the link above, but it is more convenient to use your package manager, e.g.
 
-![__Figure__: my package manager](images/package_manager.png)
 
 ### _RStudio_ (IDE: Integrated Development Editor)
 
@@ -72,7 +70,6 @@ We'll not do much with it today, but will return to it for the machine learning 
   
 An advantage is that separate environments can be maintained that are each focused on its own niche:  
 
-![__Figure__: my environments: _mne_ is for analysis of magnetoencephalographic data, _psychopy_ is for presenting experiment scenarios, _fsl_ is for processing magnetic resonance imaging data](images/list_of_environments.png)
 
 Then use the yml-file from _GitHub_ to create the appropriate environment:
 ```{bash, eval=FALSE}
@@ -85,7 +82,9 @@ conda activate methods3
 spyder
 ```
 
-![__Figure__: _Spyder_](images/spyder.png)
+```{r}
+pacman::p_load(reticulate) #trying to use the package reticulate to get python and r to work together well
+```
 
 ### Check that it works
 
@@ -167,32 +166,226 @@ The general linear model: $Y = X \beta + \epsilon$:
 Do a linear regression, expressing fuel usage as a function of weight using the function __lm__  
 ```{r, eval=FALSE}
 data(mtcars)
-model <- lm(formula=..., data=...)
+model_lm <- lm(mpg ~ wt, data = mtcars)
+
 ```
-1. extract $\hat{\beta}$, $Y$, $\hat{Y}$, $X$ and $\epsilon$ from __model__ (hint: have a look at the function __model.matrix__)  
-    i. create a plot that illustrates $Y$ and $\hat{Y}$ (if you are feeling ambitious, also include $\epsilon$ (hint: you can use the function __arrows__))
+
+1. extract $\hat{\beta}$, $Y$, $\hat{Y}$, $X$ and $\epsilon$ from __model__ (hint: have a look at the function __model.matrix__)
+
+
+```{r}
+# betahat given the summary
+bhat_model <- model_lm$coefficients
+```
+*beta hat is a vector representing the  slope, -5.34, and the intercept. The slope indicates that for each time the weight goes up by 1 lb/1000, the fuel use decreases by 5.34 - intuitively this makes no sense though ... The intercept is 37.23 which here does not make sense to interpret, since it is the fuel use when a car has the weight of 0*
+
+```{r}
+# actual y values 
+library(tidyverse)
+Y <- tibble(mtcars$mpg)
+Y <- as.matrix(Y)
+Y
+```
+This gives the actual values of y. 
+
+```{r}
+#estimated y
+est_Y <- tibble(predict(model_lm))
+est_Y <- as.matrix(est_Y)
+
+est_Y
+```
+
+
+```{r}
+#the actual x-values of the weight:
+X <- model.matrix(model_lm)
+X
+```
+gives us all the x-values, which is here the actual weight of each car. 
+
+```{r}
+# epsilon - also known as the residuals
+residuals <- model_lm$residuals
+residuals
+```
+This is the difference between the actual y-value and the estimated y-value - the vertical length from each datapoint to the linear model. 
+    
+    
+i. create a plot that illustrates $Y$ and $\hat{Y}$ (if you are feeling ambitious, also include $\epsilon$ (hint: you can use the function __arrows__))
+
+```{r}
+library(tidyverse)
+
+ggplot(mtcars, aes(wt)) +                    # basic graphical object
+  geom_point(aes(y=est_Y), colour="red") +
+  geom_line(aes(y=est_Y), colour="pink") +
+  geom_point(aes(y=Y), colour="blue") +
+  ylab("Y") + xlab('Weight (lb/1000)') + 
+  ggtitle("Illustration of Y, Estimated Y and Errors") + 
+  geom_linerange(aes(residuals, ymin = Y, ymax = est_Y, x = wt)) 
+  
+```
+
+    
 2. estimate $\beta$ for a quadratic model ($y = {\beta}_{2} x^2 + {\beta}_{1} x + {\beta}_{0}$) using ordinary least squares _without_ using __lm__; $\hat{\beta} = {({X}^{T} X)}^{-1} {X}^{T} Y$ (hint: add a third column to $X$ from step 1)
+```{r}
+X_ <- as.data.frame(X)
+X_$wt_squared <- X_$wt^2
+X_ <- as.matrix(X_)
+X_
+```
+This matrix can now be used in the formula:
+$$\hat{\boldsymbol{\beta}} = \left(\mathrm{X}^\mathsf{T} \mathrm{X}\right)^{-1} \mathrm{X}^\mathsf{T} \mathbf{y}$$
+
+```{r}
+#OLS not using lm to find the estimated beta values:
+b_hat <- solve(t(X_) %*% X_) %*% t(X_) %*% Y
+b_hat
+```
+*This is now the estimated beta values: the intercept B0 is here 49,93 and the slope is -13.38. This is now our acquired beta hat values, and they seem quite far from the lm generated - but lets compare ...*
+
+
+
 3. compare your acquired $\hat{\beta}$ with the output of the corresponding quadratic model created using __lm__ (hint: use the function __I__, see details under help and the sub-section formula operators here: https://www.datacamp.com/community/tutorials/r-formula-tutorial)  
+
+```{r}
+#comparison - lets first print the values of both the OLS estimated and lm estimated bhat:
+I(bhat_model)
+I(b_hat)
+
+```
+
     i. create a plot that illustrates $Y$ and $\hat{Y}$ (if you are feeling ambitious, also include $\epsilon$ (hint: you can use the function __arrows__))  
 
-## Exercise 2
-Compare the plotted quadratic fit to the linear fit  
+```{r}
+X_df <- as.data.frame(X_)
+y_hat_new <- b_hat[1]*X_df$`(Intercept)` + b_hat[2]*X_df$wt + b_hat[3]*X_df$wt_squared #calculating y values based on the OLS estimated bhat
 
-1. which seems better?  
+y_hat_new
+
+ggplot(mtcars, aes(wt)) +                    # basic graphical object
+  geom_line(aes(y=est_Y), colour="lightblue") +
+  geom_point(aes(y= y_hat_new), colour="darkgreen") +
+ stat_smooth(aes(y = y_hat_new),method = "lm", formula = y ~ x + I(x^2), size = 0.5, color = 'green') +
+  geom_point(aes(y=Y), colour="blue") +
+  ylab("Y") + xlab('Weight (lb/1000)') + 
+  ggtitle("Illustration of Y, Estimated Y and OLS Estimated Y") 
+  
+
+
+```
+The green line is the quadratic fit, based on the OLS estimator, the blue is the actual data points, and the red is the datapoints generated from the linear model. 
+
+
+
+## Exercise 2
+Compare the plotted quadratic fit to the linear fit 
+
+1. which seems better? 
+*the blue and green line seem to fit there datapoints equally good ... *
+
 2. calculate the sum of squared errors, (show the calculation based on $\epsilon$). Which fit has the lower sum?  
+
+```{r}
+#making new data frame to have the wariables needed, to create a quadratic model:
+df_qua <- tibble(wt = X_df$wt, wt_squared = X_df$wt_squared,mpg = mtcars$mpg)
+model_qua <- lm(mpg ~ wt + wt_squared, data = df_qua)
+```
+
+```{r}
+# Sum of squared error for the linear model 
+ssqe <- sum(residuals^2)
+
+#Sum of squared error for the quadratic model
+ssqe2 <- sum(model_qua$residuals^2)
+
+ssqe 
+ssqe2
+```
+
+
 3. now make a cubic fit ($y = {\beta}_{3} x^3 + {\beta}_{2} x^2 + {\beta}_{1} x + {\beta}_{0}$) and compare it to the quadratic fit  
     i. create a plot that illustrates $Y$ and $\hat{Y}$ for both the cubic and the quadratic fits (plot them in the same plot)  
+  
+```{r}
+#making the new matrix, now containing wt^3
+X_3 <- as.data.frame(X_)
+X_3$wt_3 <- X_3$wt^3
+X_3 <- as.matrix(X_3)
+
+# making new bhat values based on the new X matrix
+b_hat3 <- solve(t(X_3) %*% X_3) %*% t(X_3) %*% Y
+b_hat3
+```
+
+
+```{r}
+#making the X3 back into a dataframe so we can use it to estimate new y values
+X_df3 <- as.data.frame(X_3)
+
+y_model3 <- b_hat3[1]*X_df3$`(Intercept)` + b_hat3[2]*X_df3$wt + b_hat3[3]*X_df3$wt_squared + b_hat3[4]*X_df3$wt_3 #calculating y values based on the OLS estimated bhat
+
+
+ggplot(mtcars, aes(wt)) +                    # basic graphical object
+  geom_line(aes(y=est_Y), colour="lightblue") + # the lm model
+  geom_point(aes(y= y_model3), colour="darkgreen") + # the ^3
+ stat_smooth(aes(y = y_model3),method = "lm", formula = y ~ x + I(x^2), size = 0.7, color = 'green') +
+  geom_point(aes(y=Y), colour="blue") + # the actual datapoints
+  geom_point(aes(y= y_hat_new), colour="orange") + # the ^2
+ stat_smooth(aes(y = y_hat_new),method = "lm", formula = y ~ x + I(x^2) + I(x^3), size = 0.5, color = 'yellow') +
+  ylab("Y") + xlab('Weight (lb/1000)') + 
+  ggtitle("Illustration of Y, Estimated Y and OLS Estimated Y when X^2 and Y when X^3")
+
+```
+
+  
     ii. compare the sum of squared errors  
+    
+```{r}
+#Sum of squared error for the quadratic model
+ssqe2 <- sum(model_qua$residuals^2)
+
+#Sum of squared error for the ^3 model
+####making new data frame to have the wariables needed, to create a quadratic model:
+df_qua <- df_qua %>% 
+  mutate(wt_3 = X_df3$wt_3)
+
+model_3 <- lm(mpg ~ wt + wt_squared + wt_3, data = df_qua)
+ssqe3 <- sum(model_3$residuals^2)
+
+
+## comparing the sum of squared error:
+ssqe3
+ssqe2
+ssqe
+```
+
     iii. what's the estimated value of the "cubic" (${\beta}_3$) parameter? Comment on this!  
+
+```{r}
+b_hat3[4]
+```
+
+    
+    
 4. bonus question: which summary statistic is the fitted value (_Intercept_ or ${\beta}_0$ in $y = {\beta}_0$) below identical to?
 ```{r, echo=FALSE}
 lm(mpg ~ 1, data=mtcars)
+mean(mtcars$mpg)
 ```
+It is identical to the mean of the y-value, since the modal is made 
+
+
+
+
 ## Exercise 3
 Doing a logistic regression - estimating the probability that a car has automatic transmission (0) or manual transmission (1) based on its weight
 ```{r, eval=FALSE}
 data(mtcars)
-logistic.model <- glm(formula=..., data=..., family='binomial)
+logistic.model <- glm(am ~ wt, data=mtcars, family='binomial') 
+summary(logistic.model)
+
 ```
 
 Probabilities live on the range $(0, 1)$ - using the so-called logit function as a "link-function" we can map these onto the range $(-\infty, \infty)$, i.e. the real numbers.  
@@ -201,15 +394,68 @@ What we model in this case is: $Pr(y = 1) = logit^{-1}(X \beta)$, i.e. the proba
 It is helpful to define the logit function and its inverse function for the following:  
 
 ```{r}
-logit <-     function(x) log(x / (1 - x))
+logit <-     function(x) log(x / (1 - x)) #convert sigmoit into straight line
 inv.logit <- function(x) exp(x) / (1 + exp(x))
+
 ```
 
 1. plot the fitted values for __logistic.model__:  
     i. what is the relation between the __linear.predictors__ and the __fitted_values__ of the __logistic.model__ object?
+
+
+*When making a logit binomial glm model, the fitted y-hat-values are hard to interpret, since they here are on a log-scale. Only the size and magnitude can provide information, but the number it self are hard to interpret. Therefore we must transform them by the inv.logit function to be on the probability scale ranging from 0-1. They now express the probability for a certain car to have either a manual gear (1) depending on the linear predictors: their weight.*
+    
+```{r}
+y_hat_logit <- inv.logit(predict(logistic.model)) ##using the estimated y's with predict, and then inverse the values, so the y's aren't on the log scale anymore. 
+
+#making new dataframe with the values needed:
+
+log_df <- df_qua %>% 
+  mutate(y_log = y_hat_logit) %>% 
+  mutate(gear = mtcars$am)
+
+ggplot(log_df, aes(wt,y_log,))+
+  geom_point()
+
+```
+    
+    
 2. plot the logistic function, you've estimated based on your $\hat{\beta}$, (not just the fitted values). Use an _xlim_ of (0, 7)
+
+```{r}
+ggplot(log_df, aes(wt, gear))+
+  geom_point()+
+  stat_smooth(method = 'glm', method.args = list(family = binomial), se = FALSE) + 
+  xlim(0,7)
+```
+
     i. what's the interpretation of the estimated $\hat{\beta}_0$ (the _Intercept_)
+```{r}
+logistic.model$coefficients[1] #the intercept of the model
+inv.logit(logistic.model$coefficients[1]) #calculating the intercept in probability
+```
+  The probability of the gear being manual is 99,99% if the weight is 0. 
+    
+    
     ii. calculate the estimated probability that the Pontiac Firebird has automatic transmission, given its weight
+    
+```{r}
+log_df$names <- rownames(mtcars)
+pon_fire <- log_df %>% 
+  filter(log_df$names == 'Pontiac Firebird')
+
+head(pon_fire)
+```
+
+The probability of the Pontiac Firebird has automatic transmission is 3,1% given its weight.
+Could also have been done by adding the intercept with the slope times the weight of the car, and taking the inverse logit of this:
+```{r}
+inv.logit(logistic.model[1] + logistic.model[2]*3.845)
+```
+
+
+ 
+    
     iii. bonus question - plot the logistic function and highlight all the cars where we guessed wrongly, if we used the following "quantizer" function:
     
 \begin{equation}
@@ -220,10 +466,55 @@ inv.logit <- function(x) exp(x) / (1 + exp(x))
   \end{cases}
 \end{equation}    
     
+    
 3. plot quadratic fit alongside linear fit  
+
+```{r}
+log_df$am <- mtcars$am
+#logistic squared model:
+logistic.model.squared <- glm(am ~ wt + wt_squared, data=log_df, family='binomial') 
+
+log_df$predicted_squared <- inv.logit(predict(logistic.model.squared))
+log_df$predicted <- inv.logit(predict(logistic.model))
+
+library(tidyverse)
+#plot
+ggplot(log_df, aes(wt))+
+  geom_point(aes(y=predicted), colour = 'red')+
+  geom_point(aes(y=predicted_squared), colour ='green') + 
+  ylab('P(Y=1)')
+
+
+```
+
     i. judging visually, does adding a quadratic term make a difference?
+*Not really*    
+    
     ii. check the details in the help of the AIC function - which of the models provide the better fit according to the AIC values and the residual deviance respectively?
+    
+```{r}
+AIC(logistic.model,logistic.model.squared)
+```
+According to the AIC fucntion, the non-squared logistic model provides the better fit. 
+
+```{r}
+summary(logistic.model)
+#residual deviance is here 19.176
+summary(logistic.model.squared)
+#residual deviance is here 19.118
+```
+
+
+The bigger the difference of the residual deviance, the greater improvement does the added variable (here wt^2) make. Since the difference between the two deviance are quite small, I'd argue that the quadratic model is not a particularly better fit to the data, the AIC values considered as well.
+
+
     iii. in your own words, why might it be good to penalise a model like the quadratic model, we just fitted.
+    
+    
+    
+    
+    
+    
     
 # Next time
 We are going to looking at extending our models with so called random effects. We need to install the package "lme4" for this. Run the code below or install it from your package manager (Linux)  
