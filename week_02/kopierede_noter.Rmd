@@ -1,0 +1,69 @@
+---
+title: "Untitled"
+author: "Laura W. Paaby"
+date: "9/29/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
+
+```{r}
+fixef(model6)
+ranef(model6) #this is for the subject and scenario (1+random slope|random intercept)
+fitted(model6) #this gives you each values for each subject, in all scenarios, for both polite and informal
+residuals(model6) #this is then difference from the fitted value and the actual measured value in the dataset. 
+```
+*intercept - gender.M = går fra female informal to female informal*
+*intercept - gender.M - attitude = male polite*
+*intercept - attitude.pol = female polite*
+this is the case, since intercept = female informal (alphabetic)
+tænk på det som om du skal gå fra et sted til et andet og regnestykkerne får dig derhen - forhold dig til intercept først som baseline.
+
+```{r}
+ranef(model6)
+```
+giver dig mulighed for at få hver enkelt subjects predictede attitude.
+predict F1 informal: intercept (fra fixed) + (-10) (subject) + 7.25(scenarie 3)
+```{r}
+#F1 polite scenario 3: 
+f1po <- 255.61 - 10.78 + 7.25-17.192212
+f1po
+
+#m7 (-24) informal scenario 3(7.25) male (-118)
+m1inf <- 255.61-118.231676  - 24.43895 + 7.254445 #this is the same as in the fitted model 
+m1inf
+```
+
+
+
+*AIC*
+
+*The standard deviation of the residuals is the difference between a set of observed and predicted values. The standard deviation of the residuals calculates how much the data points spread around the regression line. Thus, the lower the value of this the better do the model fits all of the datapoints.*
+
+*The residual variance is the unexplained variance of any error. It is whats left when you subtract the variance due to regression from the total variance of the dependent variable. This means fot the model, that the higher it's residual variance, the less is the model able to explain the data. Looking at the variance of our 3 models, the third model (model6), which has gender and attitude as main effects and an interaction between them, the most explanatory model.* 
+
+
+
+*Summarizing ... MODEL6*
