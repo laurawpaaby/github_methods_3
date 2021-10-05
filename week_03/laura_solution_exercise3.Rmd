@@ -75,7 +75,7 @@ data$trial <- as.factor(data$trial)
 
 data$cue <- as.factor(data$cue)
 
-#task: is a character and should be a factor. It is the task setting, and can be either singles, paired or quadruplets refering to the amount of letters showing in the cue.
+#task: is a character and should be a factor. It is the task setting, and can be either singles, paired or quadruplets referring to the amount of letters showing in the cue.
 data$task <- as.factor(data$task)
 
 
@@ -187,118 +187,67 @@ df_4 <- experi.df %>%
 
 
 #making the models for each subject's response time, with only the intercept modeled, finding their residuals and adding them to data frame:
-m1 <- lm(rt.obj + 1, data = df_1)
-df_1$residuals <- residuals(m1)
-
-m2 <- lm(rt.obj + 1, data = df_2)
-df_2$residuals <- residuals(m2)
-
-m3 <- lm(rt.obj + 1, data = df_3)
-df_3$residuals <- residuals(m3)
-
-m4 <- lm(rt.obj + 1, data = df_4)
-df_4$residuals <- residuals(m4)
-
+m1 <- lm(rt.obj ~ 1, data = df_1)
+m2 <- lm(rt.obj ~ 1, data = df_2)
+m3 <- lm(rt.obj ~ 1, data = df_3)
+m4 <- lm(rt.obj ~ 1, data = df_4)
 
 
 #plotting the residuals for each subject in individual plot
 qq.m1 <- df_1 %>% 
-  ggplot(aes(residuals)) + 
-  stat_qq() +
-  geom_qq_line() + 
-  ggtitle("Residual Plot Subject 1") + 
-  xlab("Residuals") + 
-  theme_bw()
+  ggplot(aes(sample = resid(m1)))+ geom_point(stat ="qq")+ ggtitle("Subject 1")
 
 qq.m2 <- df_2 %>% 
-  ggplot(aes(residuals)) + 
-  stat_qq() +
-  geom_qq_line() + 
-  ggtitle("Residual Plot Subject 2") + 
-  xlab("Residuals") + 
-  theme_bw()
+  ggplot(aes(sample = resid(m2)))+ geom_point(stat ="qq")+ ggtitle("Subject 2")
 
 qq.m3 <- df_3 %>% 
-  ggplot(aes(residuals)) + 
-  stat_qq() +
-  geom_qq_line() + 
-  ggtitle("Residual Plot Subject 3") + 
-  xlab("Residuals") + 
-  theme_bw()
+  ggplot(aes(sample = resid(m3))) +geom_point(stat ="qq") + ggtitle("Subject 3")
 
 qq.m4 <- df_4 %>% 
-  ggplot(aes(residuals)) + 
-  stat_qq() +
-  geom_qq_line() + 
-  ggtitle("Residual Plot Subject 4") + 
-  xlab("Residuals") + 
-  theme_bw()
+  ggplot(aes(sample = resid(m4)))+geom_point(stat ="qq")+ ggtitle("Subject 4")
 
 #combining the plots  
-ggpubr::ggarrange(qq.m1, qq.m2, qq.m3, qq.m4)
+ggarrange(qq.m1, qq.m2, qq.m3, qq.m4)
 
 
 ```
     i. comment on these    
-*It appears as if the values needs a transformation....*
+*It appears as if the values needs a transformation, since it looks rather right skewed*
   
     ii. does a log-transformation of the response time data improve the Q-Q-plots?  
 *make the exact same thing, but with log around the rt.obj in each model*
 ```{r}
-m1_log <- lm(log(rt.obj) + 1, data = df_1)
-df_1$residuals.log <- residuals(m1_log)
-
-m2_log <- lm(log(rt.obj) + 1, data = df_2)
-df_2$residuals.log <- residuals(m2_log)
-
-m3_log <- lm(log(rt.obj) + 1, data = df_3)
-df_3$residuals.log <- residuals(m3_log)
-
-m4_log <- lm(log(rt.obj) + 1, data = df_4)
-df_4$residuals.log <- residuals(m4_log)
-
+m1_log <- lm(log(rt.obj) ~ 1, data = df_1)
+m2_log <- lm(log(rt.obj) ~ 1, data = df_2)
+m3_log <- lm(log(rt.obj) ~ 1, data = df_3)
+m4_log <- lm(log(rt.obj) ~ 1, data = df_4)
 
 
 #plotting the residuals for each subject in individual plot
 qq.m1.log <- df_1 %>% 
-  ggplot(aes(residuals.log)) + 
-  stat_qq() +
-  geom_qq_line() + 
-  ggtitle("Logged Residual Plot Subject 1") + 
-  xlab("Logged Residuals") + 
-  theme_bw()
+  ggplot(aes(sample = resid(m1_log)))+
+  geom_point(stat ="qq") + ggtitle("Subject 1")
 
 qq.m2.log <- df_2 %>% 
-  ggplot(aes(residuals.log)) + 
-  stat_qq() +
-  geom_qq_line() + 
-  ggtitle("Logged Residual Plot Subject 2") + 
-  xlab("Logged Residuals") + 
-  theme_bw()
+  ggplot(aes(sample = resid(m2_log)))+
+  geom_point(stat ="qq") + ggtitle("Subject 2")
 
 qq.m3.log <- df_3 %>% 
-  ggplot(aes(residuals.log)) + 
-  stat_qq() +
-  geom_qq_line() + 
-  ggtitle("Logged Residual Plot Subject 3") + 
-  xlab("Logged Residuals") + 
-  theme_bw()
+  ggplot(aes(sample = resid(m3_log)))+
+  geom_point(stat ="qq")+ ggtitle("Subject 3")
 
 qq.m4.log <- df_4 %>% 
-  ggplot(aes(residuals.log)) + 
-  stat_qq() +
-  geom_qq_line() + 
-  ggtitle("Logged Residual Plot Subject 4") + 
-  xlab("Logged Residuals") + 
-  theme_bw()
+  ggplot(aes(sample = resid(m4_log)))+
+  geom_point(stat ="qq")+ ggtitle("Subject 4")
 
 #combining the plots  
-ggpubr::ggarrange(qq.m1, qq.m2, qq.m3, qq.m4)
+ggpubr::ggarrange(qq.m1.log, qq.m2.log, qq.m3.log, qq.m4.log)
 ```
     
     
     
 2) Now do a partial pooling model modelling objective response times as dependent on _task_? (set `REML=FALSE` in your `lmer`-specification)  
+*this is done to the entire data set - I'm not sure however if what it asked is to only make the model on the four chosen participants. A sample size that small just doesn't seem that generalizable to me, so I went with all the participants.*
     
     i. which would you include among your random effects and why? (support your choices with relevant measures, taking into account variance explained and number of parameters going into the modelling) 
 *Both subject and trial are chosen as random intercepts, since I'd argue that each subject must have a uniqe baseline when entering the task. This could be both their mental state, memory, IQ etc., which means that they should be compared to their own performance between tasks to take such factors into account, as well as the average across the group. I have chosen to make trials a random intercept as well, since the type and difficulty of trial might be affecting the performance.*
@@ -317,15 +266,18 @@ MuMIn::r.squaredGLMM(part_model)
     i. how many types of group intercepts (random effects) can you add without ending up with convergence issues or singular fits?  
 
 ```{r}
-inter_model <- lmer(rt.obj ~ task + pas:task + (1 + trial|subject) + (1 | trial), data = data, REML = FALSE)
+inter_model <- lmer(rt.obj ~ pas*task + (1|subject) + (1 | trial) + (1|task) + (1|pas), data = data, REML = FALSE)
+inter_model2 <- lmer(rt.obj ~ pas*task + (1|subject) + (1|trial) + (1|pas), data = data, REML = FALSE)
+inter_model3 <- lmer(rt.obj ~ pas*task + (1|subject) + (1|trial), data = data, REML = FALSE)
 ```
+*the latter model is the only one of these I can make without running into convergence issues.*
 
 
     ii. create a model by adding random intercepts (without modelling slopes) that results in a singular fit - then use `print(VarCorr(<your.model>), comp='Variance')` to inspect the variance vector - explain why the fit is singular (Hint: read the first paragraph under details in the help for `isSingular`)
     
 ```{r}
 ?isSingular
-m_sing <- lmer(rt.obj ~ task + pas:task + (1|subject) + (1|trial) + (1|task), data = data, REML = FALSE)
+m_sing <- lmer(rt.obj ~ pas*task + (1|subject) + (1|trial) + (1|task), data = data, REML = FALSE)
 ```
 *This gives the message:*vboundary (singular) fit: see ?isSingular *meaning that this model now results in a singular fit due to the random intercepts added.*
 ```{r}
@@ -335,9 +287,6 @@ print(VarCorr(m_sing), comp='Variance')
     iii. in your own words - how could you explain why your model would result in a singular fit?  
     
 *I assume the singularity occurs as an effect of overfitted data, which occurs when a model is too complex, i.e. it has too many predictors - both random and fitted* 
-
-
-
 
 
 
@@ -433,7 +382,7 @@ subject3$predict <- predict(m_count_new, newdata = subject3)
 subject4$predict <- predict(m_count_new, newdata = subject4)
 
 
-#ratings = counts, which needs to be plottet for the subject 
+#ratings = pas, which needs to be plottet for the subject 
 sub_plot1 <- subject1 %>% 
   ggplot()+
   geom_bar(aes(pas, predict), stat = "identity",)+
@@ -490,7 +439,7 @@ taskquad.log <- inv.logit(1.10071 - 0.09825)
 
 tibble("Prob. of Correct in paired task" = taskpair.log, "Prob. of Correct in Singles Task" = tasksingles.log, "Prob. of Correct in Quadruplets Task" = taskquad.log)
 ```
-*THere is a probability between 70-80% chance to get a correct answer in all three trials, thus I'd argue that the task does not explain performance very well.*
+*There is a probability between 70-80% chance to get a correct answer in all three trials, thus I'd argue that the task does not explain performance very well.*
 
   
     ii. add _pas_ as a main effect on top of _task_ - what are the consequences of that?  
@@ -498,6 +447,8 @@ tibble("Prob. of Correct in paired task" = taskpair.log, "Prob. of Correct in Si
 model3.2 <- glmer(correct ~ task + pas + (1|subject), family = binomial, data = data)
 summary(model3.2)
 ```
+*Task doesn't add any significant difference*
+
 
     iii. now fit a multilevel model that models _correct_ as dependent on _pas_ with a unique intercept for each _subject_
     
@@ -513,10 +464,34 @@ model3.4
 ```
     
     v. describe in your words which model is the best in explaining the variance in accuracy  
-*due to the time limit I compared them by their AIC values, to find the model who explains the variance the best*:
-```{r}
-AIC(model3.1, model3.2, model3.3, model3.4)
-```
-*THe model which performs best in explaining the variance is the one modeling correct answers by pas, with subject as a random intercept*
 
-   
+```{r}
+#comparison of the  models:
+#by AIC:
+AIC1 <- AIC(model3.1, model3.2, model3.3, model3.4)
+
+#residuals for each model
+resid3.1 <- residuals(model3.1)
+resid3.2 <- residuals(model3.2)
+resid3.3 <- residuals(model3.3)
+resid3.4 <- residuals(model3.4)
+
+#comparing by standard deviation of residuals
+sd_model3.1<- sqrt((sum(resid3.1)^2/length(resid3.1)-2))
+sd_model3.2<- sqrt((sum(resid3.2)^2/length(resid3.2)-2))
+sd_model3.3<- sqrt((sum(resid3.3)^2/length(resid3.3)-2))
+sd_model3.4<- sqrt((sum(resid3.4)^2/length(resid3.4)-2))
+
+#comparing by the residual variance:
+resid.var3.1 <- sum(resid3.1^2)
+resid.var3.2 <- sum(resid3.2^2)
+resid.var3.3 <- sum(resid3.3^2)
+resid.var3.4 <- sum(resid3.4^2)
+
+library(tidyverse)
+
+residuals_comparison <- tibble("model" =c("Model 3.1", "Model 3.2", "Model 3.3", "Model 3.4"), "Res Var" = c(resid.var3.1, resid.var3.2, resid.var3.3, resid.var3.4), "Res SD" = c(sd_model3.1, sd_model3.2, sd_model3.3, sd_model3.4), "AIC" = c(AIC1[1,2], AIC1[2,2], AIC1[3,2], AIC1[4,2]))
+                                                                                             
+residuals_comparison
+```
+*I would suggest model 3.4: (correct ~ pas***task + (1|subject), family = "binomial"), since this has both the lowest residual variance and standard deviation of residuals. Thus the model must explain much of the variance it self. Intuitively, this makes rather good sense since one could imagine how subjects experience of the PAS interact with the type of task.*
