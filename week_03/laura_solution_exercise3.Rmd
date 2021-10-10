@@ -193,28 +193,35 @@ Now we __only__ look at the _experiment_ trials (_trial.type_)
 #making a dataframe only containing the experimental trials. 
 experi.df <- data %>% filter(trial.type == "experiment")
 
+df_1 <- experi.df %>% 
+    filter(subject == "001")
+df_2 <- experi.df %>% 
+    filter(subject == "002")
+df_3 <- experi.df %>% 
+    filter(subject == "003")
+df_4 <- experi.df %>% 
+    filter(subject == "004")
+
 #making the models for each subject's response time, with only the intercept modeled
 m1 <- lm(rt.obj ~ 1, data = df_1)
 m2 <- lm(rt.obj ~ 1, data = df_2)
 m3 <- lm(rt.obj ~ 1, data = df_3)
 m4 <- lm(rt.obj ~ 1, data = df_4)
 
+
 #a function that plots a qq plot for the residuals of the given model
 qq_f <- function(data.i, model.i, subject.i){
-  df <- data.i %>% 
-    filter(subject == subject.i)
-  
-  plot <- df %>% 
+  plot <- data.i %>% 
     ggplot(aes(sample = resid(model.i)))+ 
     geom_point(stat ="qq")+ 
     ggtitle("Subject", as.character(subject.i))
    
 }
 
-q1 <- qq_f(experi.df, m1, 001)
-q2 <- qq_f(experi.df, m2, 002)
-q3 <- qq_f(experi.df, m3, 003)
-q4 <- qq_f(experi.df, m4, 004)
+q1 <- qq_f(df_1, m1, 001)
+q2 <- qq_f(df_2, m2, 002)
+q3 <- qq_f(df_3, m3, 003)
+q4 <- qq_f(df_4, m4, 004)
 
 ggarrange(q1, q2, q3, q4)
 
@@ -234,10 +241,10 @@ m3_log <- lm(log(rt.obj) ~ 1, data = df_3)
 m4_log <- lm(log(rt.obj) ~ 1, data = df_4)
 
 #using the functions to plot the qqplot over residuals now over the logged models
-p1log <- qq_f(experi.df, m1_log, 001)
-p2log <- qq_f(experi.df, m2_log, 002)
-p3log <- qq_f(experi.df, m3_log, 003)
-p4log <- qq_f(experi.df, m4_log, 004)
+p1log <- qq_f(df_1, m1_log, 001)
+p2log <- qq_f(df_2, m2_log, 002)
+p3log <- qq_f(df_3, m3_log, 003)
+p4log <- qq_f(df_4, m4_log, 004)
 
 ggarrange(p1log, p2log, p3log, p4log)
 ```
