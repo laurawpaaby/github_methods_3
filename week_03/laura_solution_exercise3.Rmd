@@ -16,10 +16,11 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-#loading libaries:
+#loading libraries:
 pacman::p_load(tidyverse, readbulk, patchwork, lmerTest, ggpubr, dfoptim)
 ```
 
+added new line
 
 # Exercises and objectives
 The objectives of the exercises of this assignment are:  
@@ -39,7 +40,6 @@ The data is associated with Experiment 2 of the article at the following DOI htt
 1) Put the data from all subjects into a single data frame 
 ```{r}
 data<- as.tibble(read_bulk("experiment_2", fun = read_csv))
-glimpse(data)
 ```
 
 
@@ -49,6 +49,8 @@ glimpse(data)
 ```{r}
 #the target.type and the obj.response should match
 data$correct <- ifelse((data$obj.resp == "o" & data$target.type =="odd") | (data$obj.resp == "e" & data$target.type =="even"), 1,0)
+
+#skimming the data to see the classes of the variables 
 ls.str(data)
 ```
     
@@ -58,7 +60,7 @@ ls.str(data)
 
 
 ```{r}
-#trial_type: trial type is at the moment a character, but should be a factor, so that the perforamce can be modeled and compared by which trial was done
+#trial_type: trial type is at the moment a character, but should be a factor, so that the performance can be modeled and compared by which trial was done
 data$trial.type <- as.factor(data$trial.type)
 
 
@@ -72,7 +74,6 @@ data$target.contrast <- as.numeric(data$target.contrast)
 data$trial <- as.factor(data$trial)
 
 #cue: is 36 different combinations of numbers participants can be cued with, 3 types depending on the task setting.
-
 data$cue <- as.factor(data$cue)
 
 #task: is a character and should be a factor. It is the task setting, and can be either singles, paired or quadruplets referring to the amount of letters showing in the cue.
@@ -119,7 +120,7 @@ plot1 <- ggplot(df_m, aes(target.contrast, fitted_y, color = correct)) +
 
 
 #model for NO pooling:
-##### meaning that we only take into account the indiviual and does not pool the data together. 
+##### meaning that we only take into account the individual and does not pool the data together. 
 no.pool <- glm(correct ~ target.contrast + subject + subject:target.contrast, data = df_m, family = "binomial" )
 fit_np <- fitted(no.pool)
 
@@ -133,10 +134,26 @@ plot2 <- ggplot(df_m, aes(target.contrast, fit_np, color = correct)) +
 
 plot1
 plot2
+
+
 ```
 *for the training I made both a no pool and complete pool after the best of my knowledge, which indicates how big of a difference that makes. However non of them seem to fit the data that well.*
 
 *These are both supposed to follow a sigmoid function, assuming the relation i logistic, but this is not really the case. There appears to be a ceiling effect, since almost all subjects had way more correct answers than wrong, meaning almost all of the points are at y = 1.*
+
+```{r}
+#complete pooling with observed y-values. 
+plot3 <- ggplot(df_m, aes(target.contrast, correct, color = correct)) + 
+    geom_point(size =0.5)+
+    facet_wrap(~subject) +
+    theme_minimal()+
+    xlab("Target Contrast")+
+    ylab('Correct') +
+    ggtitle("Subplot for Each Subject - COMPLETE POOLING")  
+
+plot3
+```
+
 
     
     iv. on top of those plots, add the estimated functions (on the _target.contrast_ range from 0-1) for each subject based on partial pooling model (use `glmer` from the package `lme4`) where unique intercepts and slopes for _target.contrast_ are modelled for each _subject_  
@@ -173,75 +190,56 @@ Now we __only__ look at the _experiment_ trials (_trial.type_)
 1) Pick four subjects and plot their Quantile-Quantile (Q-Q) plots for the residuals of their objective response times (_rt.obj_) based on a model where only intercept is modelled  
 
 ```{r}
-#picking the subjects: 1, 2 3 and 4. 
+#making a dataframe only containing the experimental trials. 
 experi.df <- data %>% filter(trial.type == "experiment")
 
-df_1 <- experi.df %>% 
-  filter(subject == "001") 
-df_2 <- experi.df %>%  
-  filter(subject == "002") 
-df_3 <- experi.df %>% 
-  filter(subject == "003") 
-df_4 <- experi.df %>% 
-  filter(subject == "004")
-
-
-#making the models for each subject's response time, with only the intercept modeled, finding their residuals and adding them to data frame:
+#making the models for each subject's response time, with only the intercept modeled
 m1 <- lm(rt.obj ~ 1, data = df_1)
 m2 <- lm(rt.obj ~ 1, data = df_2)
 m3 <- lm(rt.obj ~ 1, data = df_3)
 m4 <- lm(rt.obj ~ 1, data = df_4)
 
+#a function that plots a qq plot for the residuals of the given model
+qq_f <- function(data.i, model.i, subject.i){
+  df <- data.i %>% 
+    filter(subject == subject.i)
+  
+  plot <- df %>% 
+    ggplot(aes(sample = resid(model.i)))+ 
+    geom_point(stat ="qq")+ 
+    ggtitle("Subject", as.character(subject.i))
+   
+}
 
-#plotting the residuals for each subject in individual plot
-qq.m1 <- df_1 %>% 
-  ggplot(aes(sample = resid(m1)))+ geom_point(stat ="qq")+ ggtitle("Subject 1")
+q1 <- qq_f(experi.df, m1, 001)
+q2 <- qq_f(experi.df, m2, 002)
+q3 <- qq_f(experi.df, m3, 003)
+q4 <- qq_f(experi.df, m4, 004)
 
-qq.m2 <- df_2 %>% 
-  ggplot(aes(sample = resid(m2)))+ geom_point(stat ="qq")+ ggtitle("Subject 2")
+ggarrange(q1, q2, q3, q4)
 
-qq.m3 <- df_3 %>% 
-  ggplot(aes(sample = resid(m3))) +geom_point(stat ="qq") + ggtitle("Subject 3")
-
-qq.m4 <- df_4 %>% 
-  ggplot(aes(sample = resid(m4)))+geom_point(stat ="qq")+ ggtitle("Subject 4")
-
-#combining the plots  
-ggarrange(qq.m1, qq.m2, qq.m3, qq.m4)
 
 
 ```
     i. comment on these    
-*It appears as if the values needs a transformation, since it looks rather right skewed*
+*It appears as if the values needs a transformation, since it looks rather skewed and doesn't look normally distributed.*
   
     ii. does a log-transformation of the response time data improve the Q-Q-plots?  
 *make the exact same thing, but with log around the rt.obj in each model*
 ```{r}
+#making the logged models 
 m1_log <- lm(log(rt.obj) ~ 1, data = df_1)
 m2_log <- lm(log(rt.obj) ~ 1, data = df_2)
 m3_log <- lm(log(rt.obj) ~ 1, data = df_3)
 m4_log <- lm(log(rt.obj) ~ 1, data = df_4)
 
+#using the functions to plot the qqplot over residuals now over the logged models
+p1log <- qq_f(experi.df, m1_log, 001)
+p2log <- qq_f(experi.df, m2_log, 002)
+p3log <- qq_f(experi.df, m3_log, 003)
+p4log <- qq_f(experi.df, m4_log, 004)
 
-#plotting the residuals for each subject in individual plot
-qq.m1.log <- df_1 %>% 
-  ggplot(aes(sample = resid(m1_log)))+
-  geom_point(stat ="qq") + ggtitle("Subject 1")
-
-qq.m2.log <- df_2 %>% 
-  ggplot(aes(sample = resid(m2_log)))+
-  geom_point(stat ="qq") + ggtitle("Subject 2")
-
-qq.m3.log <- df_3 %>% 
-  ggplot(aes(sample = resid(m3_log)))+
-  geom_point(stat ="qq")+ ggtitle("Subject 3")
-
-qq.m4.log <- df_4 %>% 
-  ggplot(aes(sample = resid(m4_log)))+
-  geom_point(stat ="qq")+ ggtitle("Subject 4")
-
-#combining the plots  
-ggpubr::ggarrange(qq.m1.log, qq.m2.log, qq.m3.log, qq.m4.log)
+ggarrange(p1log, p2log, p3log, p4log)
 ```
     
     
@@ -375,50 +373,30 @@ subject2 <- data.count %>% filter(subject == "002")
 subject3 <- data.count %>% filter(subject == "003")
 subject4 <- data.count %>% filter(subject == "004")
 
-#the estimated ratings:
-subject1$predict <- predict(m_count_new, newdata = subject1)
-subject2$predict <- predict(m_count_new, newdata = subject2)
-subject3$predict <- predict(m_count_new, newdata = subject3)
-subject4$predict <- predict(m_count_new, newdata = subject4)
 
+f <- function(i, model){
+  sub.pred <- predict(model, newdata = i)
+  i$est.count <- sub.pred
+  
+  p <- i %>% 
+    ggplot()+
+    geom_bar(aes(x = pas, y = est.count, fill = task), stat = "identity")+
+    theme_bw() +
+    ggtitle("Subject", as.character(i[1,1])) +
+    xlab("PAS")+
+    ylab("Estimated count")
+   
+}
 
-#ratings = pas, which needs to be plottet for the subject 
-sub_plot1 <- subject1 %>% 
-  ggplot()+
-  geom_bar(aes(pas, predict), stat = "identity",)+
-  theme_bw() +
-  ggtitle("Subject 1") +
-  xlab("PAS")+
-  ylab("Estimated count")
+p1 <- f(subject1, m_count_new)
+p2 <- f(subject2, m_count_new)
+p3 <- f(subject3, m_count_new)
+p4 <- f(subject4, m_count_new)
 
-sub_plot2 <- subject2 %>% 
-  ggplot()+
-  geom_bar(aes(pas, predict), stat = "identity")+
-  theme_bw() + 
-  ggtitle("Subject 2")+
-  xlab("PAS")+
-  ylab("Estimated count")
-
-sub_plot3 <- subject3 %>% 
-  ggplot()+
-  geom_bar(aes(pas, predict), stat = "identity")+
-  theme_bw() + 
-  ggtitle("Subject 3")+
-  xlab("PAS")+
-  ylab("Estimated count")
-
-sub_plot4 <- subject4 %>% 
-  ggplot()+
-  geom_bar(aes(pas, predict), stat = "identity")+
-  theme_bw()+
-  ggtitle("Subject 4")+
-  xlab("PAS")+
-  ylab("Estimated count")
-
-ggarrange(sub_plot1, sub_plot2, sub_plot3, sub_plot4)
-
+ggarrange(p1, p2, p3, p4)
 
 ```
+
 
 3) Finally, fit a multilevel model that models _correct_ as dependent on _task_ with a unique intercept for each _subject_  
 
