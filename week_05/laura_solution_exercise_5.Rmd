@@ -1,12 +1,14 @@
 ---
 title: "practical_exercise_5, Methods 3, 2021, autumn semester"
-author: 'Laura W. Paaby, studygroup 9'
+author: "Laura W. Paaby, studygroup 9"
 date: "13/10 - 2021"
-output: pdf_document
+output:
+  html_document:
+    df_print: paged
 ---
 
 
-```{r setup, include=FALSE}
+```{r, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
@@ -38,7 +40,7 @@ pacman::p_load(tidyverse, readbulk, patchwork, lmerTest, ggpubr, dfoptim, multco
 
 1) Put the data from all subjects into a single data frame - note that some of the subjects do not have the _seed_ variable. For these subjects, add this variable and make in _NA_ for all observations. (The _seed_ variable will not be part of the analysis and is not an experimental variable)  
   
-```{r setup, include=FALSE}
+```{r, include=FALSE}
 #loading data
 data<- as.tibble(read_bulk("experiment_1", fun = read_csv))
 
@@ -427,7 +429,7 @@ _d_, which can be interpreted as the *steepness at the inflexion point*. (When _
   
 We can define a function of a residual sum of squares as below
 
-```{r, eval=FALSE}
+```{r}
 RSS <- function(dataset, par)
 {
     ## "dataset" should be a data.frame containing the variables x (target.frames)
