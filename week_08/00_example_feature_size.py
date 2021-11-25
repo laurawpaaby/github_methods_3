@@ -9,13 +9,16 @@ Created on Mon Nov 15 16:33:24 2021
 #%% IMPORT AND READ DATASET
 from sklearn import datasets
 iris = datasets.load_iris()
-X = iris.data[:, 0:1]
-y = iris.target
+X = iris.data[:, 0:1] #takes in only column one = sepal length 
+y = iris.target #taking all target
 
+#splitting the data into train and test (test size is 20%)
 from sklearn.model_selection import train_test_split
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2,
                                                     random_state=0)
 
+#making everything on the same scale
+#### substracting the mean and standardize by standard deviation
 from sklearn.preprocessing import StandardScaler
 sc = StandardScaler()
 sc.fit(X_train)
@@ -28,6 +31,7 @@ import numpy as np
 import seaborn as sns
 import matplotlib.pyplot as plt
 
+### making a correlation matrix 
 plt.close('all')
 cm = np.corrcoef(iris.data.T)
 sns.set(font_scale=0.75)
@@ -37,18 +41,28 @@ hm = sns.heatmap(cm,
                  square=True,
                  fmt='.2f',
                  annot_kws={'size': 15},
-                 yticklabels=iris.feature_names,
+                 yticklabels=iris.feature_names, #using feature names to name the ticks 
                  xticklabels=iris.feature_names,
                  vmin=-1.0, vmax=1.0)
 
 plt.show()
 
-#%% LOGISTIC REGRESSION
+####width and lentgh seems to be correlated to some of the matrix
 
+#%% LOGISTIC REGRESSION
+#### just calling it with default parameters (l2 regu, c = 1/lambda etc)
 from sklearn.linear_model import LogisticRegression
 logR = LogisticRegression(penalty='none') # no regularisation
-logR.fit(X_train_std, y_train)
-print(logR.score(X_test_std, y_test))
+logR.fit(X_train_std, y_train) #fitting it on the training set
+
+### score
+print(logR.score(X_test_std, y_test)) #gives us the accuracy - how many are rightfully classified 
+
+print(logR.predict(X_test_std)) #the predicted needed to do it manually
+print(np.sum((logR.predict(X_test_std)) == y_test) / len(y_test)) #estimated manually 
+
+
+
 
 #%% WITH CROSS-VALIDATION
 
@@ -57,7 +71,7 @@ from sklearn.model_selection import cross_val_score, StratifiedKFold
 # or as close as possible.
 cv = StratifiedKFold()
 
-X = iris.data[:, 0:1]
+X = iris.data[:, 0:4]
 y = iris.target
 
 from sklearn.preprocessing import StandardScaler
@@ -65,6 +79,8 @@ sc = StandardScaler()
 sc.fit(X)
 X_std = sc.transform(X)
 
+#the log regression 
+### here we not standardize y, since it is 0,1 etc (labels)
 scores = cross_val_score(logR, X_std, y, cv=cv)
 print(np.mean(scores))
 
@@ -113,11 +129,10 @@ x2 = X_std[:, 1:2]
 
 sds = [100, 10, 1, 0.1, 0.01]
 for sd in sds:
-    gamma = 1 / sd **2
     k = kernel(x1, x2, sd)
     plt.figure()
     plt.plot(k)
     plt.xticks(ticks=range(len(y)), labels=y)
-    plt.title('Similarity between features x1 and x2 with sd. ' + str(sd) + ', gamma: ' + str(gamma))
+    plt.title('Similarity between features x1 and x2 with sd. ' + str(sd))
     plt.ylim(-0.1, 1.1)
     plt.show()
